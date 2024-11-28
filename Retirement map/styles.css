@@ -380,3 +380,9 @@ nav ul a:hover {
   font-size: 1rem;
   line-height: 1.5;
 }
+
+#us-map {
+  height: 500px;
+  width: 100%;
+  background-color: #f5f5f5;
+}
