@@ -1,0 +1,80 @@
+body {
+  font-family: "Roboto", sans-serif;
+  margin: 0;
+  padding: 0;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+}
+
+section {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+}
+#map {
+  text-align: center;
+  padding: 20px;
+  border-radius: 12px;
+  margin: 20px auto;
+  width: 1500px;
+}
+
+.map-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #006400;
+  margin-bottom: 10px;
+}
+
+.map-description {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+#us-map {
+  border: 2px solid #006400;
+}
+
+.state-graphs {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+}
+h1 {
+  width: 100%;
+  text-align: center;
+}
+/* Adjust sizes for pie chart and bar graph */
+#pie-chart-container {
+  flex: 1; /* Adjust to control width relative to #bar-chart-container */
+  min-width: 300px;
+  max-width: 600px;
+  height: 400px; /* Change height here */
+}
+
+#bar-chart-container {
+  flex: 1; /* Adjust to control width relative to #pie-chart-container */
+  min-width: 300px;
+  max-width: 600px;
+  height: 400px; /* Change height here */
+}
+
+/* Resize canvas to fit containers */
+canvas {
+  width: 30% !important;
+  height: 90% !important;
+}
+
+.chart-container canvas {
+  width: 100% !important;
+  height: 100%;
+}
