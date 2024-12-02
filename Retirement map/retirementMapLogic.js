@@ -310,6 +310,14 @@ function onEachFeature(feature, layer) {
     } else {
       console.log("No crime data found for state:", stateName);
     }
+
+    // Scroll to the state-graphs div
+    const graphsDiv = document.getElementById("state-graphs-container");
+    if (graphsDiv) {
+      graphsDiv.scrollIntoView({ behavior: "smooth" });
+    } else {
+      console.error("State graphs div not found.");
+    }
   });
 }
 
@@ -367,3 +375,37 @@ Promise.all([
     generateBarChart(defaultState, stateCrimeData);
   }
 });
+
+// Create a legend control
+const legend = L.control({ position: "bottomright" });
+
+legend.onAdd = function (map) {
+  const div = L.DomUtil.create("div", "info legend");
+
+  // Define the rank intervals and their corresponding colors
+  const ranks = [1, 10, 20, 30, 40, 51]; // Adjust ranges as needed
+  const labels = [];
+
+  // Loop through the intervals and generate a label with a colored square for each interval
+  for (let i = 0; i < ranks.length - 1; i++) {
+    const color = d3.scaleSequential(d3.interpolateYlGnBu).domain([1, 50])(
+      ranks[i]
+    );
+
+    labels.push(
+      `<i style="background:${color}; width: 18px; height: 18px; display: inline-block; margin-right: 5px;"></i> 
+      ${ranks[i]} - ${ranks[i + 1] - 1}`
+    );
+  }
+
+  // Add the legend content
+  div.innerHTML = `
+    <h4>State Rankings</h4>
+    ${labels.join("<br>")}
+  `;
+
+  return div;
+};
+
+// Add the legend to the map
+legend.addTo(map);
