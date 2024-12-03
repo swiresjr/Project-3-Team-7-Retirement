@@ -1,122 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Weather Data by Month</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-</head>
+  </head>
 
-<body>
+  <body>
     <div>
-        <h1>Weather Data by Month</h1>
-        <p>Use the dropdown below to select a state and view its data</p>
+      <h1>Weather Data by Month</h1>
+      <p>Use the dropdown below to select a state and view its data</p>
 
-        <h6>Choose a state to explore:</h6>
-        <select id="selDataset" onchange="optionChanged(this.value)">
-            <!-- Dropdown options will be populated here -->
-        </select>
-        
-        <div id="plot"></div>
+      <h6>Choose a state to explore:</h6>
+      <select id="selDataset" onchange="optionChanged(this.value)">
+        <!-- Dropdown options will be populated here -->
+      </select>
+
+      <div id="plot"></div>
     </div>
 
     <script>
-        // Fetch the CSV data
-        fetch('state_average_temperature_2023_all_states.csv')
-            .then(response => response.text())
-            .then(data => {
-                const rows = data.split('\n'); // Split the CSV data by rows
-                const months = rows[0].split(',').slice(1); // Get months from the first row, skipping state column
-                const states = [];
-                const parsedData = [];
+      // Fetch the CSV data
+      let parsedWeatherData = []; // Declare globally
+      let weatherMonths = []; // Declare globally
 
-                // Loop through the data starting from row 1 (skipping header)
-                for (let i = 1; i < rows.length; i++) {
-                    const cols = rows[i].split(',');
+      // Fetch weather data once during page load
+      fetch("../Resources/state_average_temperature_2023_all_states.csv")
+        .then((response) => response.text())
+        .then((data) => {
+          const rows = data.split("\n"); // Split the CSV data by rows
+          weatherMonths = rows[0].split(",").slice(1); // Extract months from the header row
 
-                    const state = cols[0]; // The first column contains the state name
-                    const stateData = { state };
+          for (let i = 1; i < rows.length; i++) {
+            const cols = rows[i].split(",");
+            const state = cols[0];
+            const stateData = { state };
 
-                    // Add temperature data for each month to stateData
-                    for (let j = 1; j < cols.length; j++) {
-                        const month = months[j - 1];  // Get month name
-                        const temp = parseFloat(cols[j]);
-                        stateData[months[j - 1]] = temp; // Store temperature data by month
-                    }
-
-                    parsedData.push(stateData); // Add the state data to parsedData
-                    states.push(state); // Collect all states for dropdown
-                }
-
-                // Populate dropdown with state names
-                const dropdown = document.getElementById('selDataset');
-                states.forEach(state => {
-                    const option = document.createElement('option');
-                    option.value = state;
-                    option.textContent = state;
-                    dropdown.appendChild(option);
-                });
-
-                // Render chart for the first state by default
-                renderChart(parsedData, months, states[0]);
-            });
-
-        // Function to render the chart
-        function renderChart(parsedData, months, selectedState) {
-            const selectedStateData = parsedData.find(data => data.state === selectedState);
-
-            if (!selectedStateData) {
-                console.error("State data not found");
-                return;
+            for (let j = 1; j < cols.length; j++) {
+              stateData[weatherMonths[j - 1]] = parseFloat(cols[j]); // Store temperature data
             }
 
-            const xData = months; // Use the months as the x-axis
-            const yData = months.map(month => selectedStateData[month]); // Map temperature data for the selected state
+            parsedWeatherData.push(stateData); // Populate the global array
+          }
+        })
+        .catch((err) => console.error("Error loading weather data:", err));
 
-            const trace = {
-                x: xData,
-                y: yData,
-                type: 'bar'
-            };
-
-            const layout = {
-                title: `Monthly Average Temperatures for ${selectedState}`,
-                xaxis: { title: 'Month' },
-                yaxis: { title: 'Average Temperature (°F)' }
-            };
-
-            Plotly.newPlot('plot', [trace], layout);
+      function updateWeatherChart(selectedState) {
+        if (!parsedWeatherData || parsedWeatherData.length === 0) {
+          console.error("Weather data not loaded yet.");
+          return;
         }
 
-        // Function to update the chart when a new state is selected
-        function optionChanged(selectedState) {
-            fetch('state_average_temperature_2023_all_states.csv')
-                .then(response => response.text())
-                .then(data => {
-                    const rows = data.split('\n'); // Split the CSV data by rows
-                    const months = rows[0].split(',').slice(1); // Get months from the first row
-                    const parsedData = [];
+        const stateData = parsedWeatherData.find(
+          (data) => data.state === selectedState
+        );
 
-                    // Parse CSV data
-                    for (let i = 1; i < rows.length; i++) {
-                        const cols = rows[i].split(',');
-                        const state = cols[0];
-                        const stateData = { state };
-
-                        for (let j = 1; j < cols.length; j++) {
-                            stateData[months[j - 1]] = parseFloat(cols[j]); // Store temperature data by month
-                        }
-
-                        parsedData.push(stateData); // Add the state data to parsedData
-                    }
-
-                    // Render the chart with the selected state
-                    renderChart(parsedData, months, selectedState);
-                });
+        if (!stateData) {
+          console.error("Weather data not found for the state:", selectedState);
+          return;
         }
+
+        const xData = weatherMonths; // Months
+        const yData = weatherMonths.map((month) => stateData[month]); // Corresponding temperatures
+
+        const trace = {
+          x: xData,
+          y: yData,
+          type: "bar",
+          marker: {
+            color: "#36A2EB",
+          },
+        };
+
+        const layout = {
+          title: `Monthly Average Temperatures for ${selectedState}`,
+          xaxis: { title: "Month" },
+          yaxis: { title: "Temperature (°F)" },
+        };
+
+        Plotly.newPlot("weather-plot", [trace], layout);
+      }
     </script>
-</body>
-
+  </body>
 </html>

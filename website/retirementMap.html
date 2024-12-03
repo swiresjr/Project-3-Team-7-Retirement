@@ -21,7 +21,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    <title>Interactive Retirement Map</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <title>Retirement Guide</title>
     <style>
       #charts-container {
         display: flex;
@@ -42,7 +44,7 @@
         <li><a href="#map">Map</a></li>
         <li><a href="#state-ranking">Rank</a></li>
 
-        <li><a href="#">Find your Home</a></li>
+        <li><a href="#find">Find your Home</a></li>
       </ul>
     </nav>
 
@@ -246,6 +248,11 @@
       <div id="state-graphs" class="state-graphs">
         <div class="chart-container" id="bar-chart-container"></div>
       </div>
+      <div id="weather-stats">
+        <h1>Weather Data by Month</h1>
+        <div id="weather-plot"></div>
+        <div id="plot"></div>
+      </div>
     </section>
     <div id="state-ranking" class="interactive-table">
       <h1>State Rankings</h1>
@@ -254,9 +261,30 @@
         <tbody id="table-body"></tbody>
       </table>
     </div>
+    <section id="find" style="flex-direction: row; margin-top: 340px">
+      <div id="data-section" class="data-section">
+        <div class="container">
+          <h2>Data Table</h2>
+          <div id="data-table"></div>
+        </div>
+      </div>
+
+      <!-- Drag-and-Drop Section -->
+      <div id="drag-drop-section" class="drag-drop-section">
+        <div class="container">
+          <h2>Customize Your Rankings</h2>
+          <p>Drag and drop the columns to change the ranking criteria.</p>
+          <div id="sortable-container" class="sortable-container"></div>
+          <div id="weights-container" class="weights-container"></div>
+
+          <button id="apply-sorting" class="btn">Apply Sorting</button>
+        </div>
+      </div>
+    </section>
 
     <script src="retirementMapLogic.js"></script>
     <script src="../interactive table/logic.js"></script>
+    <script src="script.js"></script>
   </body>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
@@ -280,5 +308,65 @@
         });
       });
     });
+    // Fetch the CSV data
+    let parsedWeatherData = []; // Declare globally
+    let weatherMonths = []; // Declare globally
+
+    // Fetch weather data once during page load
+    fetch("../Resources/state_average_temperature_2023_all_states.csv")
+      .then((response) => response.text())
+      .then((data) => {
+        const rows = data.split("\n"); // Split the CSV data by rows
+        weatherMonths = rows[0].split(",").slice(1); // Extract months from the header row
+
+        for (let i = 1; i < rows.length; i++) {
+          const cols = rows[i].split(",");
+          const state = cols[0];
+          const stateData = { state };
+
+          for (let j = 1; j < cols.length; j++) {
+            stateData[weatherMonths[j - 1]] = parseFloat(cols[j]); // Store temperature data
+          }
+
+          parsedWeatherData.push(stateData); // Populate the global array
+        }
+      })
+      .catch((err) => console.error("Error loading weather data:", err));
+
+    function updateWeatherChart(selectedState) {
+      if (!parsedWeatherData || parsedWeatherData.length === 0) {
+        console.error("Weather data not loaded yet.");
+        return;
+      }
+
+      const stateData = parsedWeatherData.find(
+        (data) => data.state === selectedState
+      );
+
+      if (!stateData) {
+        console.error("Weather data not found for the state:", selectedState);
+        return;
+      }
+
+      const xData = weatherMonths; // Months
+      const yData = weatherMonths.map((month) => stateData[month]); // Corresponding temperatures
+
+      const trace = {
+        x: xData,
+        y: yData,
+        type: "bar",
+        marker: {
+          color: "#36A2EB",
+        },
+      };
+
+      const layout = {
+        title: `Monthly Average Temperatures for ${selectedState}`,
+        xaxis: { title: "Month" },
+        yaxis: { title: "Temperature (°F)" },
+      };
+
+      Plotly.newPlot("weather-plot", [trace], layout);
+    }
   </script>
 </html>

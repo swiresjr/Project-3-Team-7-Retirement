@@ -43,6 +43,36 @@ function highlightFeature(e) {
   });
   layer.bringToFront();
 }
+function updateWeatherChart(selectedState) {
+  const stateData = parsedWeatherData.find(
+    (data) => data.state === selectedState
+  );
+
+  if (!stateData) {
+    console.error("Weather data not found for the state:", selectedState);
+    return;
+  }
+
+  const xData = weatherMonths; // Months
+  const yData = weatherMonths.map((month) => stateData[month]); // Corresponding temperatures
+
+  const trace = {
+    x: xData,
+    y: yData,
+    type: "bar",
+    marker: {
+      color: "#36A2EB",
+    },
+  };
+
+  const layout = {
+    title: `Monthly Average Temperatures for ${selectedState}`,
+    xaxis: { title: "Month" },
+    yaxis: { title: "Temperature (°F)" },
+  };
+
+  Plotly.newPlot("weather-plot", [trace], layout);
+}
 
 // Reset highlight on mouse out
 function resetHighlight(e) {
@@ -275,6 +305,8 @@ function onEachFeature(feature, layer) {
 
     updateStateTitle(stateName);
 
+    updateWeatherChart(stateName);
+
     const stateCostData = data.find((d) => d.State === stateName);
     const stateCrimeData = crimeData.filter((d) => d.State === stateName);
 
@@ -347,6 +379,7 @@ Promise.all([
   const stateCrimeData = crimeData.filter((d) => d.State === defaultState);
 
   updateStateTitle(defaultState);
+  updateWeatherChart(defaultState);
 
   if (stateCostData) {
     const parseCost = (cost) =>
